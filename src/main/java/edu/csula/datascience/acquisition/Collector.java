@@ -11,7 +11,8 @@ public interface Collector<T, R> {
     /**
      * Mungee method is to clean data. e.g. remove data rows with errors
      */
-    Collection<T> mungee(Collection<R> src);
+    Collection<T> DiscogMungee(Collection<R> src);
+    Collection<T> TracksMungee(Collection<R> src);
 
     void save(Collection<T> data);
 }
