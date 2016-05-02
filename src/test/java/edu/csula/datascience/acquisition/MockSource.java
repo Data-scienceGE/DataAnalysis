@@ -39,6 +39,17 @@ public class MockSource implements Source<Status> {
 		mockStatus2.put("created at",new Date());
     	Status status2=DataObjectFactory.createStatus(mockStatus2.toString());
     	status.add(status2);
+    	JSONObject mockStatus3=new JSONObject();
+		mockStatus3.put("text", "null");
+		mockStatus3.put("created at",new Date());
+    	Status status3=DataObjectFactory.createStatus(mockStatus3.toString());
+    	status.add(status3);
+    	
+    	JSONObject mockStatus4=new JSONObject();
+		mockStatus4.put("text", "This is not related to musix, Hence we re not expecting this in the list");
+		mockStatus4.put("created at",new Date());
+    	Status status4=DataObjectFactory.createStatus(mockStatus4.toString());
+    	status.add(status4);
     	}catch(TwitterException | JSONException e){
     		e.printStackTrace();
     	}
