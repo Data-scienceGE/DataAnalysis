@@ -27,7 +27,7 @@ public class TwitterCollectorApp {
 	
     public static void main(String[] args) throws IOException, URISyntaxException {
     	
-    	FileReader reader=new FileReader("D:\\Courses\\Spring 2016\\BigData\\workspace\\data-science\\tweets.txt");
+    	FileReader reader=new FileReader("./tweets.txt");
     	BufferedReader br=new BufferedReader(reader);
     	String line=null;
     	long lastTweetId = 0;
@@ -41,7 +41,7 @@ public class TwitterCollectorApp {
        }
     	TwitterSource source = new TwitterSource(lastTweetId, "((#NowPlaying)OR (#NowListening)) AND (by)");
        TwitterCollector collector = new TwitterCollector();
-       FileWriter writer=new FileWriter(("D:\\Courses\\Spring 2016\\BigData\\workspace\\data-science\\tweets.txt"),true);
+       FileWriter writer=new FileWriter(("./tweets.txt"),true);
         while (source.hasNext()) {
         	
             ArrayList<Status> tweets = (ArrayList<Status>) source.next();

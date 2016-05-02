@@ -148,6 +148,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 
 	@Override
 	public void save(Collection<Track> fetchedSongs) {
+		try {
 		List<Document> documents = fetchedSongs
 				.stream()
 				
@@ -168,6 +169,9 @@ public class TwitterCollector implements Collector<Track, Status> {
 				.collect(Collectors.toList());
 
 		collection.insertMany(documents);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 		
 	}
 
