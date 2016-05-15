@@ -2,23 +2,8 @@ package edu.csula.datascience.acquisition;
 
 
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import twitter4j.Status;
-import edu.csula.datascience.models.Track;
 
 /**
  * A simple example of using Twitter
@@ -27,7 +12,7 @@ public class TwitterCollectorApp {
 	
     public static void main(String[] args) throws IOException, URISyntaxException {
     	
-    	FileReader reader=new FileReader("./tweets.txt");
+    	/*FileReader reader=new FileReader("./tweets.txt");
     	BufferedReader br=new BufferedReader(reader);
     	String line=null;
     	long lastTweetId = 0;
@@ -38,11 +23,11 @@ public class TwitterCollectorApp {
        
        if(lastTweetId==0){
     	   lastTweetId=Long.MAX_VALUE;
-       }
-    	TwitterSource source = new TwitterSource(lastTweetId, "((#NowPlaying)OR (#NowListening)) AND (by)");
-       TwitterCollector collector = new TwitterCollector();
-       FileWriter writer=new FileWriter(("./tweets.txt"),true);
-        while (source.hasNext()) {
+       }*/
+    	TwitterSource2 source = new TwitterSource2("#NowPlaying by");;
+     //  TwitterCollector collector = new TwitterCollector();
+      /* FileWriter writer=new FileWriter(("./tweets.txt"),true);*/
+      /*  while (source.hasNext()) {
         	
             ArrayList<Status> tweets = (ArrayList<Status>) source.next();
             source.finalList=new ArrayList<Status>();
@@ -70,6 +55,9 @@ public class TwitterCollectorApp {
             
             
             //collector.save(cleanedTweets);
-        }writer.close();
+        }*/
+       source.readTwitterFeed();
+       
+      /* writer.close();*/
     	    }
 }

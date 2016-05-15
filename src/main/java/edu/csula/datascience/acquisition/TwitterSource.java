@@ -1,9 +1,5 @@
 package edu.csula.datascience.acquisition;
 
-import twitter4j.*;
-import twitter4j.conf.ConfigurationBuilder;
-
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
@@ -12,15 +8,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import twitter4j.Query;
+import twitter4j.QueryResult;
+import twitter4j.Status;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
+import twitter4j.conf.ConfigurationBuilder;
+
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-
-
-
-import org.json.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import edu.csula.datascience.models.AudioProperties;
 import edu.csula.datascience.models.Track;
@@ -30,7 +31,7 @@ import edu.csula.datascience.models.Track;
  */
 public class TwitterSource implements Source<Status> {
 	List<Status> finalList = new ArrayList<Status>();
-	 long minId;
+	long minId;
 	private final String searchQuery;
 	ConfigurationBuilder cb;
 	TwitterFactory tf;
@@ -72,6 +73,7 @@ public class TwitterSource implements Source<Status> {
 			query.setMaxId(minId);
 		}
 		finalList = getTweets(twitter, query);
+		System.out.println("Final List size is:"+finalList.size());
 		return finalList;
 	}
 
@@ -80,13 +82,18 @@ public class TwitterSource implements Source<Status> {
 
 		try {
 			do {
+				int count=1;
+				if(count==6){
+					break;
+				}
 				result = twitter.search(query);
 				List<Status> tweets = result.getTweets();
+				System.out.println("Inside getTweets tweets size ="+tweets.size());
 				for(Status status:tweets){
 					minId=status.getId();
 				}
 				finalList.addAll(tweets);
-				
+				count++;
 			} while ((query = result.nextQuery()) != null);
 
 		} catch (TwitterException e) {
@@ -116,7 +123,7 @@ public class TwitterSource implements Source<Status> {
 		//Note you can fetch audio-features of 100 track in one api request
 		//after this set the properties like track.setAudioProperties
 		System.out.println("Spotify has started fetching data");
-		FileWriter writer=new FileWriter("D:\\Courses\\Spring 2016\\BigData\\workspace\\data-science\\spotify-data.json",true);
+		FileWriter writer=new FileWriter("./spotify-data.json",true);
 		List<JSONArray> spotifyCollection=new ArrayList<JSONArray>();
 		List<Track> tracksCollection=new ArrayList<Track>();
 		for(Track track:cleanedTweets){
@@ -198,8 +205,9 @@ public class TwitterSource implements Source<Status> {
 	}
 
 	public Collection<Track> fetchAudioProperties(Collection<Track> fetchSongs) throws IOException {
-		FileWriter fw=new FileWriter("D:\\Courses\\Spring 2016\\BigData\\workspace\\data-science\\audio-properties.json",true);
+		FileWriter fw=new FileWriter("./audio-properties.json",true);
 		// TODO Auto-generated method stub
+		System.out.println("******* Fetching Spotify Properties ***********");
 		
 		ArrayList<Track> fetchedSongs=(ArrayList<Track>) fetchSongs;
 		int totalSize=fetchedSongs.size();
@@ -218,9 +226,24 @@ public class TwitterSource implements Source<Status> {
 				append+=",";
 			}
 			
-			System.out.println(append);
+			
+			String urlForAccessToken="https://accounts.spotify.com/api/token?grant_type=client_credentials&client_id=b6e6a0a1fe5344b195c293ee006efa34&client_secret=5ab2738f61ee40868c9aec68e8077a4c";
+			JsonNode response=null;
+			try{
+				response = Unirest.get(urlForAccessToken)
+		                .header("Content-Type", "application/json")
+		                .header("accept", "application/json")
+		                .asJson()
+		                .getBody();
+					org.json.JSONObject obj=response.getObject();
+					System.out.println("Audio Properties Response: ");
+					System.out.println(obj.toString());
+			}catch(UnirestException e){
+				e.printStackTrace();
+			}
+			
 			String url="https://api.spotify.com/v1/audio-features/?ids="+append+"&access_token=BQDHGTxW5N5RKOG24l_U9T--WQfjkgjeQKK_vTs21aY3yV7s9AV_e0g9F-AOYf8k1-AjtI1q4urFljltN3rIO4NBKxJjMACRbeNVO-cQsiR5JLw4sdevQk7otYW-k6L72KOBow";
-			JsonNode response=null;	
+				
 				try {
 			            
 						response = Unirest.get(url)
@@ -279,8 +302,6 @@ public class TwitterSource implements Source<Status> {
 		fw.flush();
 		fw.close();
 		return fetchSongs;
-		
-		
 	}
 
 }
