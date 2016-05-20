@@ -1,5 +1,6 @@
 package edu.csula.datascience.acquisition;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
@@ -32,11 +33,13 @@ public class TwitterSource2 {
 	String accessToken = null;
 	List<Status> statusCollection = new ArrayList<Status>();
 	TwitterCollector collector = new TwitterCollector();
-
 	TwitterSource2(String query) {
 		this.query = query;
 	}
 
+	FileWriter statusWriter = null;
+	
+	
 	public TwitterStream getStream() {
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true);
@@ -49,11 +52,7 @@ public class TwitterSource2 {
 
 	public Collection<Track> fetchSpotify(Collection<Track> cleanedTweets)
 			throws URISyntaxException, IOException {
-		// Fetch the tracks information from spotify like id
-		// using that id fetch the track properties lusing this
-		// https://api.spotify.com/v1/audio-features/{id}
-		// Note you can fetch audio-features of 100 track in one api request
-		// after this set the properties like track.setAudioProperties
+
 		System.out.println("Spotify has started fetching data");
 		FileWriter writer = new FileWriter("./spotify-data.json", true);
 		List<JSONArray> spotifyCollection = new ArrayList<JSONArray>();
@@ -67,14 +66,10 @@ public class TwitterSource2 {
 					"q=track:\"" + name + "\" artist:" + artist
 							+ "&type=track&limit=20", null);
 
-			// String
-			// url="https://api.spotify.com/v1/search?q=track:What's Best For You artist:trey&limit=1&type=track";
-
 			JsonNode response = null;
 			try {
 
-				response = Unirest
-						.get(uri.toURL().toString())
+				response = Unirest.get(uri.toURL().toString())
 						.header("Content-Type", "application/json")
 						.header("accept", "application/json").asJson()
 						.getBody();
@@ -130,7 +125,7 @@ public class TwitterSource2 {
 		}
 		writer.flush();
 		writer.close();
-		System.out.println("Spotify is Closing and givig data to Main");
+		
 		// write the data present in spotify collection before sending it to
 		// main
 
@@ -158,7 +153,8 @@ public class TwitterSource2 {
 			throws IOException {
 		FileWriter fw = new FileWriter("./audio-properties.json", true);
 		// TODO Auto-generated method stub
-		System.out.println("******* Fetching Spotify Properties for :"+ fetchSongs.size()+" songs***********");
+		System.out.println("******* Fetching Spotify Properties for :"
+				+ fetchSongs.size() + " songs***********");
 
 		ArrayList<Track> fetchedSongs = (ArrayList<Track>) fetchSongs;
 		int totalSize = fetchedSongs.size();
@@ -182,7 +178,7 @@ public class TwitterSource2 {
 
 			JsonNode response = null;
 			String url;
-			JSONArray audio_features = null ;
+			JSONArray audio_features = null;
 			try {
 				url = "https://api.spotify.com/v1/audio-features/?ids="
 						+ append + "&access_token=" + accessToken;
@@ -197,8 +193,8 @@ public class TwitterSource2 {
 				// get the new token and
 				System.out.println("got new Token");
 				accessToken = getNewSpotifyToken();
-				url= "https://api.spotify.com/v1/audio-features/?ids="
-						+ append + "&access_token=" +accessToken;
+				url = "https://api.spotify.com/v1/audio-features/?ids="
+						+ append + "&access_token=" + accessToken;
 				try {
 					response = Unirest.get(url)
 							.header("Content-Type", "application/json")
@@ -211,40 +207,38 @@ public class TwitterSource2 {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				
+
 			}
-			
-				for (int s = 0; j < (100 * i) + 100 && j < fetchedSongs.size(); s++,j++) {
-					JSONObject audio = audio_features.getJSONObject(s);
 
-					double loudness = audio.getDouble("loudness");
-					double liveness = audio.getDouble("liveness");
-					double tempo = audio.getDouble("tempo");
-					double valence = audio.getDouble("valence");
-					double instrumentalness = audio
-							.getDouble("instrumentalness");
-					double danceability = audio.getDouble("danceability");
-					double speechiness = audio.getDouble("speechiness");
-					double mode = audio.getDouble("mode");
-					double acousticness = audio.getDouble("acousticness");
-					double energy = audio.getDouble("energy");
-					Track track = fetchedSongs.get(s);
-					AudioProperties ap = new AudioProperties();
-					ap.setAcousticness(acousticness);
-					ap.setDanceability(danceability);
-					ap.setEnergy(energy);
-					ap.setInstrumentalness(instrumentalness);
-					ap.setLiveness(liveness);
-					ap.setLoudness(loudness);
-					ap.setMode(mode);
-					ap.setSpeechiness(speechiness);
-					ap.setTempo(tempo);
-					ap.setValence(valence);
-					track.setAudioProperties(ap);
+			for (int s = 0; j < (100 * i) + 100 && j < fetchedSongs.size(); s++, j++) {
+				JSONObject audio = audio_features.getJSONObject(s);
 
-				}
+				double loudness = audio.getDouble("loudness");
+				double liveness = audio.getDouble("liveness");
+				double tempo = audio.getDouble("tempo");
+				double valence = audio.getDouble("valence");
+				double instrumentalness = audio.getDouble("instrumentalness");
+				double danceability = audio.getDouble("danceability");
+				double speechiness = audio.getDouble("speechiness");
+				double mode = audio.getDouble("mode");
+				double acousticness = audio.getDouble("acousticness");
+				double energy = audio.getDouble("energy");
+				Track track = fetchedSongs.get(s);
+				AudioProperties ap = new AudioProperties();
+				ap.setAcousticness(acousticness);
+				ap.setDanceability(danceability);
+				ap.setEnergy(energy);
+				ap.setInstrumentalness(instrumentalness);
+				ap.setLiveness(liveness);
+				ap.setLoudness(loudness);
+				ap.setMode(mode);
+				ap.setSpeechiness(speechiness);
+				ap.setTempo(tempo);
+				ap.setValence(valence);
+				track.setAudioProperties(ap);
 
-			
+			}
+
 		}
 		for (Track track : fetchedSongs) {
 			JSONObject obj = new JSONObject();
@@ -257,6 +251,14 @@ public class TwitterSource2 {
 	}
 
 	public void readTwitterFeed() {
+		try{
+			statusWriter=new FileWriter("./status.txt",true);
+			}catch(IOException e){
+				System.out.println(e);
+			}
+		
+		System.out.println("Connected with twitter streaming API");
+		System.out.println("Started fetching Tweets");
 		TwitterStream stream = this.getStream();
 		StatusListener listener = new StatusListener() {
 
@@ -273,26 +275,37 @@ public class TwitterSource2 {
 
 			@Override
 			public void onStatus(Status status) {
-				System.out.println("Got tweet:" + status.getText()
-						+ " ** Time :" + status.getCreatedAt());
-				if (statusCollection.size() == 5) {
+				// Change the size here.
+				if (statusCollection.size() == 10) {
 					// send this collection for munging and empty the list
+					//save the status in the file first
+					try {
+						statusWriter.append(statusCollection.toString());
+						statusWriter.flush();
+						
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 					List<Track> tracks = new ArrayList<Track>();
-					System.out.println("No of tracks before munging: "+tracks.size());
 					tracks = (ArrayList<Track>) collector
 							.mungee(statusCollection);
-					System.out.println("No of tracks after munging: "+tracks.size());
+					System.out.println("Cleaned " + tracks.size()
+							+ " tracks out of " + statusCollection.size());
 					try {
 						
 						tracks = (ArrayList<Track>) fetchSpotify(tracks);
-						System.out.println("fetched properties for : "+tracks.size()+"songs");
+						System.out.println("Able to fetched Information for: "
+								+ tracks.size() + " tracks");
 					} catch (URISyntaxException | IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					try {
-						System.out.println("Fetched songs in the body :"+tracks.size());
+						System.out
+								.println("Started getting Audio Properties of tracks");
 						tracks = (ArrayList<Track>) fetchAudioProperties(tracks);
+
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -319,7 +332,7 @@ public class TwitterSource2 {
 			}
 		};
 		FilterQuery qry = new FilterQuery();
-		// String[] keywords = {};
+		
 		qry.track(query);
 		stream.addListener(listener);
 		stream.filter(qry);

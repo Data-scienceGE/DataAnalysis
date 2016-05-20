@@ -57,7 +57,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 		for (Status status : src) {
 
 			String dirtyStatus = status.getText();
-			System.out.println(dirtyStatus);
+			
 			dirtyStatus = dirtyStatus.replaceAll("(@)\\S+", "");
 
 			Pattern p = Pattern.compile(Pattern.quote("NowPlaying") + "(.*?)"
@@ -133,8 +133,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 				tweet.setRetweets(status.getRetweetCount());
 				tweet.setUser(status.getUser());
 				track.setTrackName(trackName);
-				System.out.println("trackName: "+trackName.trim());
-				System.out.println("Artist Name: "+dirtyStatus.trim());
+				
 				track.setArtistName(dirtyStatus);
 				track.setTweetInfo(tweet);
 				tracks.add(track);
