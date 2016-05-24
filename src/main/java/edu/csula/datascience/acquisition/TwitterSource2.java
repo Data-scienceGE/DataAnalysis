@@ -8,10 +8,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import twitter4j.FilterQuery;
 import twitter4j.StallWarning;
 import twitter4j.Status;
@@ -20,11 +18,9 @@ import twitter4j.StatusListener;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
-
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-
 import edu.csula.datascience.models.AudioProperties;
 import edu.csula.datascience.models.Track;
 
@@ -54,7 +50,7 @@ public class TwitterSource2 {
 			throws URISyntaxException, IOException {
 
 		System.out.println("Spotify has started fetching data");
-		FileWriter writer = new FileWriter("./spotify-data.json", true);
+		FileWriter writer = new FileWriter("./data/spotify-data.json", true);
 		List<JSONArray> spotifyCollection = new ArrayList<JSONArray>();
 		List<Track> tracksCollection = new ArrayList<Track>();
 		for (Track track : cleanedTweets) {
@@ -132,7 +128,7 @@ public class TwitterSource2 {
 		return tracksCollection;
 	}
 
-	public String getNewSpotifyToken() {
+	public String getNewSpotifyToken(){
 		String urlForAccessToken = "https://accounts.spotify.com/api/token";
 		JsonNode response = null;
 		try {
@@ -151,7 +147,7 @@ public class TwitterSource2 {
 
 	public Collection<Track> fetchAudioProperties(Collection<Track> fetchSongs)
 			throws IOException {
-		FileWriter fw = new FileWriter("./audio-properties.json", true);
+		FileWriter fw = new FileWriter("./data/audio-properties.json", true);
 		// TODO Auto-generated method stub
 		System.out.println("******* Fetching Spotify Properties for :"
 				+ fetchSongs.size() + " songs***********");
@@ -252,7 +248,7 @@ public class TwitterSource2 {
 
 	public void readTwitterFeed() {
 		try{
-			statusWriter=new FileWriter("./status.txt",true);
+			statusWriter=new FileWriter("./data/status.txt",true);
 			}catch(IOException e){
 				System.out.println(e);
 			}

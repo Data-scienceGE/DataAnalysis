@@ -1,8 +1,16 @@
 package edu.csula.datascience.acquisition;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.QueryBuilder;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 
 import edu.csula.datascience.models.Track;
 import edu.csula.datascience.models.Tweet;
@@ -48,20 +56,18 @@ public class TwitterCollector implements Collector<Track, Status> {
 	@Override
 	public Collection<Track> mungee(Collection<Status> src) {
 		// go through each src and extract text
-		
-		//Lucene Analyzer
-		 Analyzer analyzer = new StopAnalyzer(Version.LUCENE_36);
-		  
-		
+
+		// Lucene Analyzer
+		Analyzer analyzer = new StopAnalyzer(Version.LUCENE_36);
+
 		List<Track> tracks = new ArrayList<Track>();
 		for (Status status : src) {
 
 			String dirtyStatus = status.getText();
-			
+
 			dirtyStatus = dirtyStatus.replaceAll("(@)\\S+", "");
 
-			Pattern p = Pattern.compile(Pattern.quote("NowPlaying") + "(.*?)"
-					+ Pattern.quote("by"));
+			Pattern p = Pattern.compile(Pattern.quote("NowPlaying") + "(.*?)" + Pattern.quote("by"));
 			Matcher m = p.matcher(dirtyStatus);
 			String trackName = null;
 
@@ -76,14 +82,13 @@ public class TwitterCollector implements Collector<Track, Status> {
 			}
 			if (trackName != null && trackName.contains(":")) {
 				trackName = trackName.replaceAll(":", "");
-				
-				
+
 				// set the trackName here when we make object
 			}
-			if(trackName != null && trackName.contains("http"))
-			trackName=trackName.replaceAll("(http)\\s+", "");
-			if(trackName != null && trackName.contains("-")){
-				trackName=trackName.substring(0, trackName.lastIndexOf("-"));
+			if (trackName != null && trackName.contains("http"))
+				trackName = trackName.replaceAll("(http)\\s+", "");
+			if (trackName != null && trackName.contains("-")) {
+				trackName = trackName.substring(0, trackName.lastIndexOf("-"));
 			}
 			// get the dirtyStatus and extract the part after by
 			// System.out.println(status.getText());
@@ -95,48 +100,60 @@ public class TwitterCollector implements Collector<Track, Status> {
 				int indexOfHttps = dirtyStatus.indexOf("https", indexOfby);
 				if (indexOfby != -1 && indexOfHttps != -1)
 
-					dirtyStatus = dirtyStatus
-							.substring(indexOfby, indexOfHttps);
+					dirtyStatus = dirtyStatus.substring(indexOfby, indexOfHttps);
 				// remove hashtags
 				dirtyStatus = dirtyStatus.replaceAll("#[A-Za-z]+", "");
 
-				String[] artistDelimiter = { "?", "from", "on", "in", "-", "|",
-						"#", "@" };
+				String[] artistDelimiter = { "?", "from", "on", "in", "-", "|", "#", "@" };
 				for (int i = 0; i < artistDelimiter.length; i++) {
 					if (dirtyStatus.contains(artistDelimiter[i])) {
-						dirtyStatus = dirtyStatus.substring(0,
-								(dirtyStatus.indexOf(artistDelimiter[i])));
+						dirtyStatus = dirtyStatus.substring(0, (dirtyStatus.indexOf(artistDelimiter[i])));
 						break;
 					}
 				}
+
+				dirtyStatus = dirtyStatus.replace("by", "");
+				String artistName = dirtyStatus;
 				
-				dirtyStatus = dirtyStatus.replace("by","");
-				String artistName="";
-				/* TokenStream tokenStream = analyzer.tokenStream("contents", 
-					      new StringReader(dirtyStatus));
-					   TermAttribute term = tokenStream.addAttribute(TermAttribute.class);
-					   try {
-						while(tokenStream.incrementToken()) {
-						     artistName+=term.term()+" ";
-						   }
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+				char[] arr=artistName.toCharArray();
+				String finalArtist="";
+				for(int i=0;i<arr.length;i++){
+					if((int)arr[i]==9835){
+						continue;
 					}
-				dirtyStatus=artistName.trim();	*/ 
-				if(trackName !=null && dirtyStatus!=null && trackName.length()>0 && dirtyStatus.length()>0){
-				Track track = new Track();
-				Tweet tweet = new Tweet();
-				tweet.setTweetId(status.getId());
-				//tweet.setCreatedAt(status.getCreatedAt().toString());
-				tweet.setLikes(status.getFavoriteCount());
-				tweet.setRetweets(status.getRetweetCount());
-				tweet.setUser(status.getUser());
-				track.setTrackName(trackName);
-				
-				track.setArtistName(dirtyStatus);
-				track.setTweetInfo(tweet);
-				tracks.add(track);
+					finalArtist+=arr[i];
+				}
+				artistName=finalArtist.trim();
+				System.out.println("Artist Name: "+artistName);
+				if (trackName != null && artistName != null && trackName.length() > 0 && artistName.length() > 0) {
+					//get track by track name and artist name from mongo and if record already exist than 
+					//just add the tweet info in the track.
+					System.out.println("Looking for track: "+trackName+" and Artist: "+artistName);
+					BasicDBObject doc=new BasicDBObject();
+					QueryBuilder query=new QueryBuilder();
+					Pattern regex1 = Pattern.compile(trackName); 
+					Pattern regex2 = Pattern.compile(artistName); 
+					query.and(new QueryBuilder().put("trackName").is(regex1).get(),new QueryBuilder().put("artistName").is(regex2).get());
+					doc.putAll(query.get());
+					FindIterable iterator=collection.find(doc);
+					MongoCursor cursor=iterator.iterator();
+					while(cursor.hasNext()){
+						System.out.println(cursor.next());
+					}
+					
+					Track track = new Track();
+					Tweet tweet = new Tweet();
+					tweet.setTweetId(status.getId());
+					// tweet.setCreatedAt(status.getCreatedAt().toString());
+					tweet.setLikes(status.getFavoriteCount());
+					tweet.setRetweets(status.getRetweetCount());
+					tweet.setUser(status.getUser());
+					track.setTrackName(trackName);
+					
+					track.setArtistName(artistName);
+
+					//track.setTweetInfo(tweet);
+					tracks.add(track);
 				}
 			}
 
@@ -145,33 +162,30 @@ public class TwitterCollector implements Collector<Track, Status> {
 		return tracks;
 	}
 
-	@Override
+@Override
 	public void save(Collection<Track> fetchedSongs) {
-		try {
-		List<Document> documents = fetchedSongs
-				.stream()
-				
-				.map(item -> new Document().append("trackId", item.getTrackId())
-						.append("artistName", item.getArtistName())
-						.append("trackDuration", item.getTrackDuration())
-						.append("trackName", item.getTrackName())
-						.append("spotifyPopularity", item.getTrackSpotifyPopularity())
-						.append("tweetId",item.getTweetInfo().getTweetId())
-						.append("createdAt",item.getTweetInfo().getCreatedAt())
-						.append("tweetLikes",item.getTweetInfo().getLikes())
-						.append("retweets",item.getTweetInfo().getRetweets())
-						.append("status",item.getTweetInfo().getStatus())
-						.append("tweetId",item.getTweetInfo().getTweetId())
-						.append("userLocation",item.getTweetInfo().getUser().getLocation()))
-						
-						
-				.collect(Collectors.toList());
+		/*try {
+			List<Document> documents = fetchedSongs.stream()
 
-		collection.insertMany(documents);
-		} catch(Exception e) {
+					.map(item -> new Document().append("trackId", item.getTrackId())
+							.append("artistName", item.getArtistName()).append("trackDuration", item.getTrackDuration())
+							.append("trackName", item.getTrackName())
+							.append("spotifyPopularity", item.getTrackSpotifyPopularity())
+							.append("tweetId", item.getTweetInfo().getTweetId())
+							.append("createdAt", item.getTweetInfo().getCreatedAt())
+							.append("tweetLikes", item.getTweetInfo().getLikes())
+							.append("retweets", item.getTweetInfo().getRetweets())
+							.append("status", item.getTweetInfo().getStatus())
+							.append("tweetId", item.getTweetInfo().getTweetId())
+							.append("userLocation", item.getTweetInfo().getUser().getLocation()))
+
+					.collect(Collectors.toList());
+
+			collection.insertMany(documents);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+*/
 	}
 
 }

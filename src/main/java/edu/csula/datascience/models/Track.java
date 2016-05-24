@@ -7,10 +7,9 @@ public class Track {
 	String trackId;
 	int trackSpotifyPopularity;
 	String trackName;
-	Tweet tweetInfo;    //This should contain all the tweets for the particular track
-							//we can identify this by track id from spotify
+	List<Tweet> tweetInfo;   
 	String artistName;
-	AudioProperties audioProperties;  //here we need to create one more model class based on spotify api response and change the type
+	AudioProperties audioProperties;  
 	public long getTrackDuration() {
 		return trackDuration;
 	}
@@ -37,10 +36,10 @@ public class Track {
 		this.trackName = trackName;
 	}
 	
-	public Tweet getTweetInfo() {
+	public List<Tweet> getTweetInfo() {
 		return tweetInfo;
 	}
-	public void setTweetInfo(Tweet tweetInfo) {
+	public void setTweetInfo(List<Tweet> tweetInfo) {
 		this.tweetInfo = tweetInfo;
 	}
 	public String getArtistName() {
