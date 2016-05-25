@@ -1,5 +1,6 @@
 package edu.csula.datascience.acquisition;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -21,6 +22,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.util.Version;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import twitter4j.Status;
 
@@ -152,30 +154,53 @@ public class TwitterCollector implements Collector<Track, Status> {
 					System.out.println("Looking for track: "+trackName+" and Artist: "+artistName);
 					BasicDBObject doc=new BasicDBObject();
 					QueryBuilder query=new QueryBuilder();
+					trackName="Boomerang";
+					artistName ="Lali";
 					Pattern regex1 = Pattern.compile(trackName); 
 					Pattern regex2 = Pattern.compile(artistName); 
 					query.and(new QueryBuilder().put("trackName").is(regex1).get(),new QueryBuilder().put("artistName").is(regex2).get());
 					doc.putAll(query.get());
 					FindIterable iterator=collection.find(doc);
+					BasicDBObject tweetobj = new BasicDBObject();
+					tweetobj.put("likes", status.getFavoriteCount());
+					tweetobj.put("retweets", status.getRetweetCount());
+					tweetobj.put("userID", status.getUser().getId());
+					tweetobj.put("createdAt", status.getUser().getCreatedAt());
+					if(iterator.first()==null){
 					MongoCursor cursor=iterator.iterator();
-					while(cursor.hasNext()){
-						System.out.println(cursor.next());
-					}
 					
 					Track track = new Track();
+					BasicDBList tweet_info = new BasicDBList(); 
 					Tweet tweet = new Tweet();
 					tweet.setTweetId(status.getId());
 					// tweet.setCreatedAt(status.getCreatedAt().toString());
 					tweet.setLikes(status.getFavoriteCount());
 					tweet.setRetweets(status.getRetweetCount());
 					tweet.setUser(status.getUser());
+					
+					tweet_info.add(tweetobj);
 					track.setTrackName(trackName);
 					List<Tweet> tweetsList=new ArrayList<Tweet>();
 					tweetsList.add(tweet);
 					track.setArtistName(artistName);
-					track.setTweetInfo(tweetsList);
+					track.setTweetInfo(tweet_info);
+					//track.setTweetInfo(tweetsList);
 					//track.setTweetInfo(tweet);
 					tracks.add(track);
+					}else{
+						MongoCursor<Document> c = iterator.iterator();
+						//BasicDBList fuck=(BasicDBList) ;
+						Bson filter=new Document("trackName",trackName);
+						
+						Document d = c.next();
+						ArrayList fuck=new ArrayList();
+						fuck=(ArrayList) d.get("tweetInfo");
+						System.out.println("size:"+fuck.size());
+						fuck.add(tweetobj);
+						Bson value=new Document("trackName", "fuck");
+						collection.updateOne(filter,value );
+						 						
+					}
 				}
 			}
 
@@ -206,7 +231,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 														.append("mode", item.getAudioProperties().getMode())
 														.append("acousticness", item.getAudioProperties().getAcousticness())
 														.append("energy", item.getAudioProperties().getEnergy()))
-									.append("tweetsInfo", item.getTweetInfo() ))
+									.append("tweetInfo", item.getTweetInfo() ))
 
 					.collect(Collectors.toList());
 

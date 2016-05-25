@@ -1,8 +1,10 @@
 package edu.csula.datascience.models;
 
+import java.io.Serializable;
+
 import twitter4j.User;
 
-public class Tweet {
+public class Tweet implements Serializable {
 	// tweet id, status,created at, favourite count,retweet
 	// count,User information
 

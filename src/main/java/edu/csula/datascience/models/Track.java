@@ -2,12 +2,16 @@ package edu.csula.datascience.models;
 
 import java.util.List;
 
+import com.mongodb.BasicDBList;
+
 public class Track {
+	
 	long trackDuration;
 	String trackId;
 	int trackSpotifyPopularity;
 	String trackName;
-	List<Tweet> tweetInfo;   
+	//List<Tweet> tweetInfo;
+	BasicDBList tweetInfo;
 	String artistName;
 	AudioProperties audioProperties;  
 	public long getTrackDuration() {
@@ -36,14 +40,21 @@ public class Track {
 		this.trackName = trackName;
 	}
 	
-	public List<Tweet> getTweetInfo() {
+	/*public List<Tweet> getTweetInfo() {
 		return tweetInfo;
 	}
 	public void setTweetInfo(List<Tweet> tweetInfo) {
 		this.tweetInfo = tweetInfo;
-	}
+	}*/
+	
 	public String getArtistName() {
 		return artistName;
+	}
+	public BasicDBList getTweetInfo() {
+		return tweetInfo;
+	}
+	public void setTweetInfo(BasicDBList tweetInfo) {
+		this.tweetInfo = tweetInfo;
 	}
 	public void setArtistName(String artistName) {
 		this.artistName = artistName;
