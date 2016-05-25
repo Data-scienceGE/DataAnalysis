@@ -189,16 +189,14 @@ public class TwitterCollector implements Collector<Track, Status> {
 					tracks.add(track);
 					}else{
 						MongoCursor<Document> c = iterator.iterator();
-						//BasicDBList fuck=(BasicDBList) ;
-						Bson filter=new Document("trackName",trackName);
+						Document d=c.next();
+						ArrayList list=new ArrayList();
+						list=(ArrayList) d.get("tweetInfo");
+						list.add(tweetobj);
+						System.out.println("Array List now:"+list);
+						d.replace("tweetInfo", list);
+						collection.replaceOne(doc, d);
 						
-						Document d = c.next();
-						ArrayList fuck=new ArrayList();
-						fuck=(ArrayList) d.get("tweetInfo");
-						System.out.println("size:"+fuck.size());
-						fuck.add(tweetobj);
-						Bson value=new Document("trackName", "fuck");
-						collection.updateOne(filter,value );
 						 						
 					}
 				}
