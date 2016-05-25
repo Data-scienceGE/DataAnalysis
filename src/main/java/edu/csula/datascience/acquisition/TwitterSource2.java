@@ -178,6 +178,7 @@ public class TwitterSource2 {
 			try {
 				url = "https://api.spotify.com/v1/audio-features/?ids="
 						+ append + "&access_token=" + accessToken;
+				System.out.println("URL : "+url.toString());
 				response = Unirest.get(url)
 						.header("Content-Type", "application/json")
 						.header("accept", "application/json").asJson()
@@ -205,33 +206,38 @@ public class TwitterSource2 {
 				}
 
 			}
-
+			j = 100 * i;
 			for (int s = 0; j < (100 * i) + 100 && j < fetchedSongs.size(); s++, j++) {
-				JSONObject audio = audio_features.getJSONObject(s);
-
-				double loudness = audio.getDouble("loudness");
-				double liveness = audio.getDouble("liveness");
-				double tempo = audio.getDouble("tempo");
-				double valence = audio.getDouble("valence");
-				double instrumentalness = audio.getDouble("instrumentalness");
-				double danceability = audio.getDouble("danceability");
-				double speechiness = audio.getDouble("speechiness");
-				double mode = audio.getDouble("mode");
-				double acousticness = audio.getDouble("acousticness");
-				double energy = audio.getDouble("energy");
-				Track track = fetchedSongs.get(s);
-				AudioProperties ap = new AudioProperties();
-				ap.setAcousticness(acousticness);
-				ap.setDanceability(danceability);
-				ap.setEnergy(energy);
-				ap.setInstrumentalness(instrumentalness);
-				ap.setLiveness(liveness);
-				ap.setLoudness(loudness);
-				ap.setMode(mode);
-				ap.setSpeechiness(speechiness);
-				ap.setTempo(tempo);
-				ap.setValence(valence);
-				track.setAudioProperties(ap);
+				try {
+					JSONObject audio = audio_features.getJSONObject(s);
+					System.out.println("Loop running" + s);
+	
+					double loudness = audio.getDouble("loudness");
+					double liveness = audio.getDouble("liveness");
+					double tempo = audio.getDouble("tempo");
+					double valence = audio.getDouble("valence");
+					double instrumentalness = audio.getDouble("instrumentalness");
+					double danceability = audio.getDouble("danceability");
+					double speechiness = audio.getDouble("speechiness");
+					double mode = audio.getDouble("mode");
+					double acousticness = audio.getDouble("acousticness");
+					double energy = audio.getDouble("energy");
+					Track track = fetchedSongs.get(s);
+					AudioProperties ap = new AudioProperties();
+					ap.setAcousticness(acousticness);
+					ap.setDanceability(danceability);
+					ap.setEnergy(energy);
+					ap.setInstrumentalness(instrumentalness);
+					ap.setLiveness(liveness);
+					ap.setLoudness(loudness);
+					ap.setMode(mode);
+					ap.setSpeechiness(speechiness);
+					ap.setTempo(tempo);
+					ap.setValence(valence);
+					track.setAudioProperties(ap);
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
 
 			}
 
@@ -248,6 +254,9 @@ public class TwitterSource2 {
 
 	public void readTwitterFeed() {
 		try{
+			File file = new File("data\\status.txt");
+			file.getParentFile().mkdir();
+			file.createNewFile();
 			statusWriter=new FileWriter("./data/status.txt",true);
 			}catch(IOException e){
 				System.out.println(e);
@@ -273,6 +282,7 @@ public class TwitterSource2 {
 			public void onStatus(Status status) {
 				// Change the size here.
 				if (statusCollection.size() == 10) {
+					
 					// send this collection for munging and empty the list
 					//save the status in the file first
 					try {
@@ -301,11 +311,16 @@ public class TwitterSource2 {
 						System.out
 								.println("Started getting Audio Properties of tracks");
 						tracks = (ArrayList<Track>) fetchAudioProperties(tracks);
+						for (Track t: tracks) {
+							System.out.println(t.getAudioProperties());
+						}
+						collector.save(tracks);
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					
 					statusCollection = new ArrayList<Status>();
 				}
 				statusCollection.add(status);

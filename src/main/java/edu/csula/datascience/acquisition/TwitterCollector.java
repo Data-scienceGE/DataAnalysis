@@ -76,6 +76,17 @@ public class TwitterCollector implements Collector<Track, Status> {
 				trackName = ("\t" + m.group(1));
 
 			}
+			if (trackName != null) {
+				trackName = trackName.replace("*", "\\*");
+				trackName = trackName.replace("?", "\\?");
+				trackName = trackName.replace("(", "\\(");
+				trackName = trackName.replace(")", "\\)");
+				trackName = trackName.replace("+", "\\+");
+				trackName = trackName.replace("[", "\\[");
+				trackName = trackName.replace("]", "\\]");
+
+			}
+			
 			if (trackName != null && trackName.contains("#")) {
 				trackName = trackName.replaceAll("#[A-Za-z]+", "");
 
@@ -128,6 +139,16 @@ public class TwitterCollector implements Collector<Track, Status> {
 				if (trackName != null && artistName != null && trackName.length() > 0 && artistName.length() > 0) {
 					//get track by track name and artist name from mongo and if record already exist than 
 					//just add the tweet info in the track.
+					if (artistName != null) {
+						artistName = artistName.replace("*", "\\*");
+						artistName = artistName.replace("?", "\\?");
+						artistName = artistName.replace("(", "\\(");
+						artistName = artistName.replace(")", "\\)");
+						artistName = artistName.replace("+", "\\+");
+						artistName = artistName.replace("[", "\\[");
+						artistName = artistName.replace("]", "\\]");
+
+					}
 					System.out.println("Looking for track: "+trackName+" and Artist: "+artistName);
 					BasicDBObject doc=new BasicDBObject();
 					QueryBuilder query=new QueryBuilder();
@@ -149,9 +170,10 @@ public class TwitterCollector implements Collector<Track, Status> {
 					tweet.setRetweets(status.getRetweetCount());
 					tweet.setUser(status.getUser());
 					track.setTrackName(trackName);
-					
+					List<Tweet> tweetsList=new ArrayList<Tweet>();
+					tweetsList.add(tweet);
 					track.setArtistName(artistName);
-
+					track.setTweetInfo(tweetsList);
 					//track.setTweetInfo(tweet);
 					tracks.add(track);
 				}
@@ -164,20 +186,27 @@ public class TwitterCollector implements Collector<Track, Status> {
 
 @Override
 	public void save(Collection<Track> fetchedSongs) {
-		/*try {
+		try {
 			List<Document> documents = fetchedSongs.stream()
 
-					.map(item -> new Document().append("trackId", item.getTrackId())
-							.append("artistName", item.getArtistName()).append("trackDuration", item.getTrackDuration())
+					.map(item -> new Document()
+							.append("trackId", item.getTrackId())
 							.append("trackName", item.getTrackName())
-							.append("spotifyPopularity", item.getTrackSpotifyPopularity())
-							.append("tweetId", item.getTweetInfo().getTweetId())
-							.append("createdAt", item.getTweetInfo().getCreatedAt())
-							.append("tweetLikes", item.getTweetInfo().getLikes())
-							.append("retweets", item.getTweetInfo().getRetweets())
-							.append("status", item.getTweetInfo().getStatus())
-							.append("tweetId", item.getTweetInfo().getTweetId())
-							.append("userLocation", item.getTweetInfo().getUser().getLocation()))
+							.append("artistName", item.getArtistName())
+							.append("duration", item.getTrackDuration())
+							.append("trackPopularity", item.getTrackSpotifyPopularity())
+							.append("audioProperties", new BasicDBObject().append("loudness", item.getAudioProperties().getLoudness())
+									
+														.append("liveness", item.getAudioProperties().getLiveness())
+														.append("tempo", item.getAudioProperties().getTempo())
+														.append("valence", item.getAudioProperties().getValence())
+														.append("instrumentalness", item.getAudioProperties().getInstrumentalness())
+														.append("danceability", item.getAudioProperties().getDanceability())
+														.append("speechiness", item.getAudioProperties().getSpeechiness())
+														.append("mode", item.getAudioProperties().getMode())
+														.append("acousticness", item.getAudioProperties().getAcousticness())
+														.append("energy", item.getAudioProperties().getEnergy()))
+									.append("tweetsInfo", item.getTweetInfo() ))
 
 					.collect(Collectors.toList());
 
@@ -185,7 +214,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-*/
+
 	}
 
 }
