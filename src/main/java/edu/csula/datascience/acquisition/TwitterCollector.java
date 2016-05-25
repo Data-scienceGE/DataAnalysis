@@ -154,8 +154,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 					System.out.println("Looking for track: "+trackName+" and Artist: "+artistName);
 					BasicDBObject doc=new BasicDBObject();
 					QueryBuilder query=new QueryBuilder();
-					trackName="Boomerang";
-					artistName ="Lali";
+					
 					Pattern regex1 = Pattern.compile(trackName); 
 					Pattern regex2 = Pattern.compile(artistName); 
 					query.and(new QueryBuilder().put("trackName").is(regex1).get(),new QueryBuilder().put("artistName").is(regex2).get());
@@ -166,7 +165,9 @@ public class TwitterCollector implements Collector<Track, Status> {
 					tweetobj.put("retweets", status.getRetweetCount());
 					tweetobj.put("userID", status.getUser().getId());
 					tweetobj.put("createdAt", status.getUser().getCreatedAt());
+					System.out.println("Checking value of iterator"+iterator.first());
 					if(iterator.first()==null){
+					
 					MongoCursor cursor=iterator.iterator();
 					
 					Track track = new Track();
@@ -184,10 +185,12 @@ public class TwitterCollector implements Collector<Track, Status> {
 					tweetsList.add(tweet);
 					track.setArtistName(artistName);
 					track.setTweetInfo(tweet_info);
+					track.setTrackDate(status.getCreatedAt());
 					//track.setTweetInfo(tweetsList);
 					//track.setTweetInfo(tweet);
 					tracks.add(track);
 					}else{
+						System.out.println("Entry Already Exist");
 						MongoCursor<Document> c = iterator.iterator();
 						Document d=c.next();
 						ArrayList list=new ArrayList();
@@ -218,6 +221,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 							.append("artistName", item.getArtistName())
 							.append("duration", item.getTrackDuration())
 							.append("trackPopularity", item.getTrackSpotifyPopularity())
+							.append("tweetDate", item.getTrackDate())
 							.append("audioProperties", new BasicDBObject().append("loudness", item.getAudioProperties().getLoudness())
 									
 														.append("liveness", item.getAudioProperties().getLiveness())

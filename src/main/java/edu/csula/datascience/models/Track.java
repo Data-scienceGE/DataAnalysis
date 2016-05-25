@@ -1,5 +1,6 @@
 package edu.csula.datascience.models;
 
+import java.util.Date;
 import java.util.List;
 
 import com.mongodb.BasicDBList;
@@ -10,6 +11,7 @@ public class Track {
 	String trackId;
 	int trackSpotifyPopularity;
 	String trackName;
+	Date trackDate;
 	//List<Tweet> tweetInfo;
 	BasicDBList tweetInfo;
 	String artistName;
@@ -65,6 +67,14 @@ public class Track {
 	public void setAudioProperties(AudioProperties audioProperties) {
 		this.audioProperties = audioProperties;
 	}
+	public Date getTrackDate() {
+		return trackDate;
+	}
+	public void setTrackDate(Date trackDate) {
+		this.trackDate = trackDate;
+	}
+	
+	
 	
 	
 	
