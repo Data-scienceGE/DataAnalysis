@@ -281,7 +281,7 @@ public class TwitterSource2 {
 			@Override
 			public void onStatus(Status status) {
 				// Change the size here.
-				if (statusCollection.size() == 500) {
+				if (statusCollection.size() == 50) {
 					
 					// send this collection for munging and empty the list
 					//save the status in the file first

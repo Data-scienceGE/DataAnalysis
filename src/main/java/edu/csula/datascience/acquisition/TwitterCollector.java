@@ -164,7 +164,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 					tweetobj.put("likes", status.getFavoriteCount());
 					tweetobj.put("retweets", status.getRetweetCount());
 					tweetobj.put("userID", status.getUser().getId());
-					tweetobj.put("createdAt", status.getUser().getCreatedAt());
+					tweetobj.put("createdAt", status.getCreatedAt());
 					System.out.println("Checking value of iterator"+iterator.first());
 					if(iterator.first()==null){
 					
