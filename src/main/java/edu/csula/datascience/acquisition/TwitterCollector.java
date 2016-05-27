@@ -154,9 +154,14 @@ public class TwitterCollector implements Collector<Track, Status> {
 					System.out.println("Looking for track: "+trackName+" and Artist: "+artistName);
 					BasicDBObject doc=new BasicDBObject();
 					QueryBuilder query=new QueryBuilder();
+					Pattern regex1 = null,regex2 = null;
 					
-					Pattern regex1 = Pattern.compile(trackName); 
-					Pattern regex2 = Pattern.compile(artistName); 
+					try{
+					regex1 = Pattern.compile(trackName); 
+					regex2 = Pattern.compile(artistName); 
+					}catch(Exception e){
+						break;
+					}
 					query.and(new QueryBuilder().put("trackName").is(regex1).get(),new QueryBuilder().put("artistName").is(regex2).get());
 					doc.putAll(query.get());
 					FindIterable iterator=collection.find(doc);

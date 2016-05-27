@@ -76,15 +76,10 @@ public class TwitterSource2 {
 				try {
 					tracks = obj.getJSONObject("tracks");
 				} catch (Exception e) {
-					try {
-						Thread.sleep(500);
-					} catch (Exception ex) {
-						ex.printStackTrace();
-					}
 					continue;
 				}
 				int total = tracks.getInt("total");
-				if (total > 0) {
+				if (total >0) {
 					JSONArray results = tracks.getJSONArray("items");
 					spotifyCollection.add(results);
 					JSONObject trackInfo = results.getJSONObject(0);
@@ -97,7 +92,6 @@ public class TwitterSource2 {
 					if (spotifyCollection.size() == 1500) {
 						writer.flush();
 						writer.append(spotifyCollection.toString());
-
 						spotifyCollection = new ArrayList<JSONArray>();
 
 					}
@@ -106,7 +100,7 @@ public class TwitterSource2 {
 			} catch (UnirestException e) {
 
 				try {
-					Thread.sleep(800);
+					Thread.sleep(500);
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -117,10 +111,11 @@ public class TwitterSource2 {
 		if (spotifyCollection.size() > 0) {
 
 			writer.append(spotifyCollection.toString() + "\n");
+			spotifyCollection = new ArrayList<JSONArray>();
 
 		}
 		writer.flush();
-		writer.close();
+		//writer.close();
 		
 		// write the data present in spotify collection before sending it to
 		// main
@@ -149,13 +144,11 @@ public class TwitterSource2 {
 			throws IOException {
 		FileWriter fw = new FileWriter("./data/audio-properties.json", true);
 		// TODO Auto-generated method stub
-		System.out.println("******* Fetching Spotify Properties for :"
-				+ fetchSongs.size() + " songs***********");
-
 		ArrayList<Track> fetchedSongs = (ArrayList<Track>) fetchSongs;
 		int totalSize = fetchedSongs.size();
 		int count = Math.max(totalSize / 100, 1);
-		System.out.println("Count Value is:" + count);
+		List<JSONArray> writeAudioProperties=new ArrayList<JSONArray>();
+		
 
 		for (int i = 0; i < count; i++) {
 			String append = "";
@@ -170,7 +163,7 @@ public class TwitterSource2 {
 				}
 				append += ",";
 			}
-			System.out.println("Appended Id's are:" + append);
+			
 
 			JsonNode response = null;
 			String url;
@@ -178,17 +171,16 @@ public class TwitterSource2 {
 			try {
 				url = "https://api.spotify.com/v1/audio-features/?ids="
 						+ append + "&access_token=" + accessToken;
-				System.out.println("URL : "+url.toString());
+				
 				response = Unirest.get(url)
 						.header("Content-Type", "application/json")
 						.header("accept", "application/json").asJson()
 						.getBody();
 				org.json.JSONObject obj = response.getObject();
-				System.out.println(obj.toString());
 				audio_features = obj.getJSONArray("audio_features");
+				writeAudioProperties.add(audio_features);
 			} catch (Exception e) {
 				// get the new token and
-				System.out.println("got new Token");
 				accessToken = getNewSpotifyToken();
 				url = "https://api.spotify.com/v1/audio-features/?ids="
 						+ append + "&access_token=" + accessToken;
@@ -198,8 +190,8 @@ public class TwitterSource2 {
 							.header("accept", "application/json").asJson()
 							.getBody();
 					org.json.JSONObject obj = response.getObject();
-					System.out.println(obj.toString());
 					audio_features = obj.getJSONArray("audio_features");
+					writeAudioProperties.add(audio_features);
 				} catch (UnirestException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -210,8 +202,6 @@ public class TwitterSource2 {
 			for (int s = 0; j < (100 * i) + 100 && j < fetchedSongs.size(); s++, j++) {
 				try {
 					JSONObject audio = audio_features.getJSONObject(s);
-					System.out.println("Loop running" + s);
-	
 					double loudness = audio.getDouble("loudness");
 					double liveness = audio.getDouble("liveness");
 					double tempo = audio.getDouble("tempo");
@@ -242,11 +232,7 @@ public class TwitterSource2 {
 			}
 
 		}
-		for (Track track : fetchedSongs) {
-			JSONObject obj = new JSONObject();
-			obj.put(track.getTrackId(), track.getAudioProperties());
-			fw.append(obj.toString());
-		}
+		fw.append(writeAudioProperties.toString());
 		fw.flush();
 		fw.close();
 		return fetchSongs;
@@ -281,7 +267,7 @@ public class TwitterSource2 {
 			@Override
 			public void onStatus(Status status) {
 				// Change the size here.
-				if (statusCollection.size() == 50) {
+				if (statusCollection.size() == 100) {
 					
 					// send this collection for munging and empty the list
 					//save the status in the file first
@@ -294,27 +280,24 @@ public class TwitterSource2 {
 						e1.printStackTrace();
 					}
 					List<Track> tracks = new ArrayList<Track>();
+					System.out.println("Munging process started for "+statusCollection.size()+" tracks");
 					tracks = (ArrayList<Track>) collector
 							.mungee(statusCollection);
-					System.out.println("Cleaned " + tracks.size()
-							+ " tracks out of " + statusCollection.size());
+					System.out.println("Mungee Process Completed and cleaned :"+tracks.size()+" tracks");
 					try {
-						
+						System.out.println("Started fetching songs from spotify");
 						tracks = (ArrayList<Track>) fetchSpotify(tracks);
-						System.out.println("Able to fetched Information for: "
-								+ tracks.size() + " tracks");
+						System.out.println("Spotify fetching completed and received info for:"+tracks.size()+" tracks");
 					} catch (URISyntaxException | IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					try {
-						System.out
-								.println("Started getting Audio Properties of tracks");
+						System.out.println("Started getting Audio Properties of tracks");
 						tracks = (ArrayList<Track>) fetchAudioProperties(tracks);
-						for (Track t: tracks) {
-							System.out.println(t.getAudioProperties());
-						}
+						System.out.println("Fetching Audio Properties completed and started saving data in mongo");
 						collector.save(tracks);
+						System.out.println("Saving to database complete");
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
