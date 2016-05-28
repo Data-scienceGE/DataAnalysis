@@ -4,6 +4,7 @@ package edu.csula.datascience.acquisition;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
@@ -59,14 +60,14 @@ public class ElasticSearch{
 	private final static String indexName = "tracks";
     private final static String typeName = "track";
     Node node;
-    Client client;
+    public Client client;
 	public ElasticSearch(Collection<Track> tracks) {
 		// establish database connection to MongoDB
 		
 		// select collection by name `tweets`
 		this.tracks=(ArrayList<Track>) tracks;
 		 node= nodeBuilder().settings(Settings.builder()
-		            .put("cluster.name", "my-application4")
+		            .put("cluster.name", "my-application5")
 		            .put("path.home", "elasticsearch-data")).node();
 		  client = node.client();
 	}
@@ -105,7 +106,7 @@ public class ElasticSearch{
 		                    failure.printStackTrace();
 		                }
 		            })
-		            .setBulkActions(1)
+		            .setBulkActions(this.tracks.size())
 		            .setBulkSize(new ByteSizeValue(1, ByteSizeUnit.GB))
 		            .setFlushInterval(TimeValue.timeValueSeconds(5))
 		            .setConcurrentRequests(1)
@@ -117,14 +118,34 @@ public class ElasticSearch{
 			 try {
 				 obj=XContentFactory.jsonBuilder().startObject()
 						 .field("trackId").value(track.getTrackId())
-						 .field("trackNamd").value(track.getTrackName())
+						 .field("trackName").value(track.getTrackName())
 						 .field("artistName").value(track.getArtistName())
-						 .endObject();
+						 .field("duration").value(track.getTrackDuration())
+						 .field("popularity").value(track.getTrackSpotifyPopularity())
+						 .field("date").value(track.getTrackDate())
+				 		.startObject("audioProperties").field("loudness").value(track.getAudioProperties().getLoudness())
+				 		.field("liveness").value(track.getAudioProperties().getLiveness())
+				 		.field("tempo").value(track.getAudioProperties().getTempo())
+				 		.field("valence").value(track.getAudioProperties().getValence())
+				 		.field("instrumentalness").value(track.getAudioProperties().getInstrumentalness())
+				 		.field("danceability").value(track.getAudioProperties().getDanceability())
+				 		.field("speechiness").value(track.getAudioProperties().getSpeechiness())
+				 		.field("mode").value(track.getAudioProperties().getMode())
+				 		.field("acousticness").value(track.getAudioProperties().getAcousticness())
+				 		.field("energy").value(track.getAudioProperties().getEnergy())
+				 		.endObject().startArray("tweetInfo");
+				 		
+				 		for( Object dbObj: track.getTweetInfo()) {
+				 			 obj.value(dbObj);
+				 		}
+				 		
+				 		obj.endArray()
+						.endObject();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			bulkProcessor.add(new IndexRequest(indexName, typeName).source(obj.string())); 
+			bulkProcessor.add(new IndexRequest(indexName, typeName,track.getTrackId()).source(obj.string())); 
 
 			 
 		}
@@ -132,7 +153,7 @@ public class ElasticSearch{
   
         // Gson library for sending json to elastic search
        
-
+		
       
 
 

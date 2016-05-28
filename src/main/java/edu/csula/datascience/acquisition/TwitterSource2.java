@@ -8,6 +8,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import twitter4j.FilterQuery;
@@ -203,6 +205,10 @@ public class TwitterSource2 {
 			j = 100 * i;
 			for (int s = 0; j < (100 * i) + 100 && j < fetchedSongs.size(); s++, j++) {
 				try {
+					if (s>=audio_features.length())
+						continue;
+					/*if (!(audio_features.getJSONObject(s) instanceof JSONObject))
+							continue;*/
 					JSONObject audio = audio_features.getJSONObject(s);
 					double loudness = audio.getDouble("loudness");
 					double liveness = audio.getDouble("liveness");
@@ -229,6 +235,7 @@ public class TwitterSource2 {
 					track.setAudioProperties(ap);
 				} catch(Exception e) {
 					e.printStackTrace();
+					
 				}
 
 			}
@@ -270,7 +277,7 @@ public class TwitterSource2 {
 			public void onStatus(Status status) {
 				// Change the size here.
 				System.out.println("Tweet Count is :"+ (++tweetCount));
-				if (statusCollection.size() == 50) {
+				if (statusCollection.size() == 100) {
 					
 					// send this collection for munging and empty the list
 					//save the status in the file first
@@ -299,12 +306,13 @@ public class TwitterSource2 {
 						System.out.println("Started getting Audio Properties of tracks");
 						tracks = (ArrayList<Track>) fetchAudioProperties(tracks);
 						System.out.println("Fetching Audio Properties completed and started saving data in mongo");
-						collector.save(tracks);
-						System.out.println("Saving to database complete");
-						System.out.println("Pushing data to Elastic Search");
-						ElasticSearch es=new ElasticSearch(tracks);
-						es.saveElastic();
-
+						if (!tracks.isEmpty()) {
+							collector.save(tracks);
+							System.out.println("Saving to database complete");
+							System.out.println("Pushing data to Elastic Search");
+							ElasticSearch es=new ElasticSearch(tracks);
+							es.saveElastic();
+						}		
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

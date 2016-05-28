@@ -1,13 +1,23 @@
 package edu.csula.datascience.acquisition;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.bson.BSON;
+import org.bson.BsonDocument;
 import org.bson.Document;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -191,8 +201,52 @@ public class TwitterCollector implements Collector<Track, Status> {
 						System.out.println("Array List now:"+list);
 						d.replace("tweetInfo", list);
 						collection.replaceOne(doc, d);
+						//replace in Elastic 
+						System.out.println("Duplicate entry in Elastic");
+						System.out.println("ID is:"+d.getString("trackId"));
+						ElasticSearch es=new ElasticSearch(tracks);
+						UpdateRequest ur = new UpdateRequest("tracks","track",d.getString("trackId"));
 						
-						 						
+						 XContentBuilder obj=null;
+						try {
+							obj = XContentFactory.jsonBuilder().startObject().startArray("tweetInfo");
+									for (Object object : list) {
+										obj.value(object);
+									}
+									 
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						try {
+							obj.endArray().endObject();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						try {
+							ur.doc(obj);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						 try {
+							es.client.update(ur).get();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					    
+					    
+						
+						
+					
+						
+					
 					}
 				}
 			}
