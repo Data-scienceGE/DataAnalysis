@@ -26,9 +26,11 @@ import edu.csula.datascience.models.Track;
 
 public class TwitterSource2 {
 	String query;
+	static int tweetCount=1;
 	String accessToken = null;
 	List<Status> statusCollection = new ArrayList<Status>();
 	TwitterCollector collector = new TwitterCollector();
+	List<JSONArray> spotifyCollection = new ArrayList<JSONArray>();
 	TwitterSource2(String query) {
 		this.query = query;
 	}
@@ -51,7 +53,7 @@ public class TwitterSource2 {
 
 		System.out.println("Spotify has started fetching data");
 		FileWriter writer = new FileWriter("./data/spotify-data.json", true);
-		List<JSONArray> spotifyCollection = new ArrayList<JSONArray>();
+		
 		List<Track> tracksCollection = new ArrayList<Track>();
 		for (Track track : cleanedTweets) {
 
@@ -267,7 +269,8 @@ public class TwitterSource2 {
 			@Override
 			public void onStatus(Status status) {
 				// Change the size here.
-				if (statusCollection.size() == 100) {
+				System.out.println("Tweet Count is :"+ (++tweetCount));
+				if (statusCollection.size() == 50) {
 					
 					// send this collection for munging and empty the list
 					//save the status in the file first
@@ -298,6 +301,9 @@ public class TwitterSource2 {
 						System.out.println("Fetching Audio Properties completed and started saving data in mongo");
 						collector.save(tracks);
 						System.out.println("Saving to database complete");
+						System.out.println("Pushing data to Elastic Search");
+						ElasticSearch es=new ElasticSearch(tracks);
+						es.saveElastic();
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block

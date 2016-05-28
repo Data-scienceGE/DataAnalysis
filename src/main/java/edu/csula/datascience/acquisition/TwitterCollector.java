@@ -1,39 +1,26 @@
 package edu.csula.datascience.acquisition;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.QueryBuilder;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
-
-import edu.csula.datascience.models.Track;
-import edu.csula.datascience.models.Tweet;
-
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.StopAnalyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
-import org.apache.lucene.util.Version;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-
-import twitter4j.Status;
-
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.bson.Document;
+
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.QueryBuilder;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+
+import edu.csula.datascience.models.Track;
+import edu.csula.datascience.models.Tweet;
+import twitter4j.Status;
 
 /**
  * An example of Collector implementation using Twitter4j with MongoDB Java
@@ -60,7 +47,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 		// go through each src and extract text
 
 		// Lucene Analyzer
-		Analyzer analyzer = new StopAnalyzer(Version.LUCENE_36);
+		//Analyzer analyzer = new StopAnalyzer(Version.LUCENE_36);
 
 		List<Track> tracks = new ArrayList<Track>();
 		for (Status status : src) {
