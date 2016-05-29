@@ -216,28 +216,42 @@ public class TwitterCollector implements Collector<Track, Status> {
 									 
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
+							es.client.close();
+							es.node.close();
 							e.printStackTrace();
+							continue;
 						}
 						try {
 							obj.endArray().endObject();
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
+							es.client.close();
+							es.node.close();
+							continue;
 						}
 						try {
 							ur.doc(obj);
 						} catch (Exception e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
+							es.client.close();
+							es.node.close();
+							continue;
 						}
 						 try {
 							es.client.update(ur).get();
+							
+							es.client.close();
+							es.node.close();
+							continue;
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (ExecutionException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
+							continue;
 						}
 						
 					    
@@ -258,7 +272,8 @@ public class TwitterCollector implements Collector<Track, Status> {
 
 @Override
 	public void save(Collection<Track> fetchedSongs) {
-		try {
+	
+	
 			List<Document> documents = fetchedSongs.stream()
 
 					.map(item -> new Document()
@@ -280,13 +295,11 @@ public class TwitterCollector implements Collector<Track, Status> {
 														.append("acousticness", item.getAudioProperties().getAcousticness())
 														.append("energy", item.getAudioProperties().getEnergy()))
 									.append("tweetInfo", item.getTweetInfo() ))
-
+					
 					.collect(Collectors.toList());
 
 			collection.insertMany(documents);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		
 
 	}
 

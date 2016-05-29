@@ -69,11 +69,13 @@ public class ElasticSearch{
 		 node= nodeBuilder().settings(Settings.builder()
 		            .put("cluster.name", "my-application5")
 		            .put("path.home", "elasticsearch-data")).node();
-		  client = node.client();
+		 client = node.client();
+		 
 	}
 	
     
 	public void saveElastic() throws IOException{
+		
 		 Gson gson = new Gson();
 		 XContentBuilder obj = null;
 		
@@ -141,6 +143,7 @@ public class ElasticSearch{
 				 		
 				 		obj.endArray()
 						.endObject();
+				 		
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -149,6 +152,9 @@ public class ElasticSearch{
 
 			 
 		}
+		client.close();
+		node.close();
+		
 	}
   
         // Gson library for sending json to elastic search

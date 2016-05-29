@@ -195,6 +195,7 @@ public class TwitterSource2 {
 							.getBody();
 					org.json.JSONObject obj = response.getObject();
 					audio_features = obj.getJSONArray("audio_features");
+					System.out.println("Audio Features: "+audio_features);
 					writeAudioProperties.add(audio_features);
 				} catch (UnirestException e1) {
 					// TODO Auto-generated catch block
@@ -209,7 +210,12 @@ public class TwitterSource2 {
 						continue;
 					/*if (!(audio_features.getJSONObject(s) instanceof JSONObject))
 							continue;*/
-					JSONObject audio = audio_features.getJSONObject(s);
+					JSONObject audio;
+					try{
+					 audio= audio_features.getJSONObject(s);
+					}catch(Exception e){
+						continue;
+					}
 					double loudness = audio.getDouble("loudness");
 					double liveness = audio.getDouble("liveness");
 					double tempo = audio.getDouble("tempo");
@@ -235,7 +241,7 @@ public class TwitterSource2 {
 					track.setAudioProperties(ap);
 				} catch(Exception e) {
 					e.printStackTrace();
-					
+					continue;
 				}
 
 			}
@@ -307,11 +313,19 @@ public class TwitterSource2 {
 						tracks = (ArrayList<Track>) fetchAudioProperties(tracks);
 						System.out.println("Fetching Audio Properties completed and started saving data in mongo");
 						if (!tracks.isEmpty()) {
+							try{
 							collector.save(tracks);
 							System.out.println("Saving to database complete");
 							System.out.println("Pushing data to Elastic Search");
 							ElasticSearch es=new ElasticSearch(tracks);
 							es.saveElastic();
+							}catch(Exception e){
+								e.printStackTrace();
+								System.out.println("Exception in Saving handeled Handeled");
+							}
+							
+							
+						
 						}		
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
