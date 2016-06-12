@@ -1,6 +1,7 @@
 package edu.csula.datascience.acquisition;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -19,6 +20,7 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
+import com.google.gson.Gson;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
@@ -28,8 +30,13 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 
+import edu.csula.datascience.examples.JestExampleApp;
 import edu.csula.datascience.models.Track;
 import edu.csula.datascience.models.Tweet;
+import io.searchbox.action.Action;
+import io.searchbox.core.Delete;
+import io.searchbox.core.Index;
+import io.searchbox.core.Update;
 import twitter4j.Status;
 
 /**
@@ -176,7 +183,10 @@ public class TwitterCollector implements Collector<Track, Status> {
 					BasicDBList tweet_info = new BasicDBList(); 
 					Tweet tweet = new Tweet();
 					tweet.setTweetId(status.getId());
-					// tweet.setCreatedAt(status.getCreatedAt().toString());
+	            	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+					tweet.setCreatedAt(sdf.format(status.getCreatedAt()));
+	            	
 					tweet.setLikes(status.getFavoriteCount());
 					tweet.setRetweets(status.getRetweetCount());
 					tweet.setUser(status.getUser());
@@ -187,7 +197,8 @@ public class TwitterCollector implements Collector<Track, Status> {
 					tweetsList.add(tweet);
 					track.setArtistName(artistName);
 					track.setTweetInfo(tweet_info);
-					track.setTrackDate(status.getCreatedAt());
+					track.setTrackDate(sdf.format(status.getCreatedAt()));
+					track.setTweetCount(1);
 					//track.setTweetInfo(tweetsList);
 					//track.setTweetInfo(tweet);
 					tracks.add(track);
@@ -200,15 +211,44 @@ public class TwitterCollector implements Collector<Track, Status> {
 						list.add(tweetobj);
 						System.out.println("Array List now:"+list);
 						d.replace("tweetInfo", list);
+						d.replace("tweetCount", list.size());
 						collection.replaceOne(doc, d);
 						//replace in Elastic 
 						System.out.println("Duplicate entry in Elastic");
 						System.out.println("ID is:"+d.getString("trackId"));
-						ElasticSearch es=new ElasticSearch(tracks);
-						UpdateRequest ur = new UpdateRequest("tracks","track",d.getString("trackId"));
+						JestExampleApp jest = new JestExampleApp(tracks);
+						//Index index = new Index.Builder("{\"tweetCount\":"+list.size()+"}").index("tracks").type("track").id(d.getString("trackId")).build();
+						String script = "{\n" +
+				                "    \"script\" : {\n" +
+								" 	 	\"inline\" : \"ctx._source.tweetCount += tag\",\n" +
+				                "    	\"params\" : {\n" +
+				                "       	 \"tag\" : "+list.size()+"\n" +
+				                "    	}\n" +
+				                "    }\n" +
+				                "}";
+						d.remove("_id");
+
+						System.out.println("Script is " + script);
+						Gson gson = new Gson();
+						System.out.println(gson.toJson(d));
+						try {
+							jest.client.execute(new Delete.Builder(d.getString("trackId")).index("tracks").type("track").id(d.getString("trackId")).build());
+							/*Thread.sleep(60000);*/
+							jest.client.execute(new Index.Builder(gson.toJson(d)).index("tracks").type("track").id(d.getString("trackId")).build());;
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							System.out.println("Something wrong while update data");
+							e.printStackTrace();
+						}
+						//ElasticSearch es=new ElasticSearch(tracks);
+/*						UpdateRequest ur = new UpdateRequest("tracks","track",d.getString("trackId"));
 						
 						 XContentBuilder obj=null;
 						try {
+							ur.doc(XContentFactory.jsonBuilder()
+							        .startObject()
+							            .field("tweetCount", list.size())
+							        .endObject());
 							obj = XContentFactory.jsonBuilder().startObject().startArray("tweetInfo");
 									for (Object object : list) {
 										obj.value(object);
@@ -253,7 +293,7 @@ public class TwitterCollector implements Collector<Track, Status> {
 							e.printStackTrace();
 							continue;
 						}
-						
+*/						
 					    
 					    
 						
@@ -280,9 +320,10 @@ public class TwitterCollector implements Collector<Track, Status> {
 							.append("trackId", item.getTrackId())
 							.append("trackName", item.getTrackName())
 							.append("artistName", item.getArtistName())
-							.append("duration", item.getTrackDuration())
-							.append("trackPopularity", item.getTrackSpotifyPopularity())
-							.append("tweetDate", item.getTrackDate())
+							.append("trackDuration", item.getTrackDuration())
+							.append("trackSpotifyPopularity", item.getTrackSpotifyPopularity())
+							.append("trackDate", item.getTrackDate())
+							.append("tweetCount", item.getTweetCount())
 							.append("audioProperties", new BasicDBObject().append("loudness", item.getAudioProperties().getLoudness())
 									
 														.append("liveness", item.getAudioProperties().getLiveness())

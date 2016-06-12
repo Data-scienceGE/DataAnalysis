@@ -23,6 +23,8 @@ import twitter4j.conf.ConfigurationBuilder;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+
+import edu.csula.datascience.examples.JestExampleApp;
 import edu.csula.datascience.models.AudioProperties;
 import edu.csula.datascience.models.Track;
 
@@ -317,8 +319,12 @@ public class TwitterSource2 {
 							collector.save(tracks);
 							System.out.println("Saving to database complete");
 							System.out.println("Pushing data to Elastic Search");
-							ElasticSearch es=new ElasticSearch(tracks);
-							es.saveElastic();
+							/*ElasticSearch es=new ElasticSearch(tracks);
+							es.saveElastic();*/
+							JestExampleApp japp = new JestExampleApp(tracks);
+							System.out.println("Created Jest");
+							japp.saveAWSElastic();
+							System.out.println("saved AWS");
 							}catch(Exception e){
 								e.printStackTrace();
 								System.out.println("Exception in Saving handeled Handeled");

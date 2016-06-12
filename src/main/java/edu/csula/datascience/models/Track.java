@@ -1,21 +1,20 @@
 package edu.csula.datascience.models;
 
-import java.util.Date;
-import java.util.List;
+
 
 import com.mongodb.BasicDBList;
 
 public class Track {
-	
-	long trackDuration;
 	String trackId;
-	int trackSpotifyPopularity;
 	String trackName;
-	Date trackDate;
+	String artistName;
+	long trackDuration;
+	int trackSpotifyPopularity;
+	String trackDate;
+	int tweetCount;
+	AudioProperties audioProperties;  
 	//List<Tweet> tweetInfo;
 	BasicDBList tweetInfo;
-	String artistName;
-	AudioProperties audioProperties;  
 	public long getTrackDuration() {
 		return trackDuration;
 	}
@@ -67,11 +66,17 @@ public class Track {
 	public void setAudioProperties(AudioProperties audioProperties) {
 		this.audioProperties = audioProperties;
 	}
-	public Date getTrackDate() {
+	public String getTrackDate() {
 		return trackDate;
 	}
-	public void setTrackDate(Date trackDate) {
+	public void setTrackDate(String trackDate) {
 		this.trackDate = trackDate;
+	}
+	public int getTweetCount() {
+		return tweetCount;
+	}
+	public void setTweetCount(int count) {
+		this.tweetCount = count;
 	}
 	
 	

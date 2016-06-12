@@ -125,6 +125,7 @@ public class ElasticSearch{
 						 .field("duration").value(track.getTrackDuration())
 						 .field("popularity").value(track.getTrackSpotifyPopularity())
 						 .field("date").value(track.getTrackDate())
+						 /*.field("tweetCount").value(track.getTweetCount())*/
 				 		.startObject("audioProperties").field("loudness").value(track.getAudioProperties().getLoudness())
 				 		.field("liveness").value(track.getAudioProperties().getLiveness())
 				 		.field("tempo").value(track.getAudioProperties().getTempo())
